@@ -63,6 +63,7 @@ public class ImagePickerRecyclerviewAdapter extends RecyclerView.Adapter<ImagePi
             @Override
             public void onClick(View v) {
                 // TODO: 17/8/11
+                holder.mDraweeView.setScale(1.5f);
             }
         });
     }
