@@ -1,0 +1,41 @@
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/imagePickerV"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!--<android.support.v7.widget.Toolbar
+                android:id="@+id/action_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorPrimary"/>-->
+
+            <include
+                android:id="@+id/pick_action_bar"
+                layout="@layout/fragment_image_picker_action_bar"/>
+
+        </FrameLayout>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:background="@color/background_material_dark"
+        android:paddingEnd="6dp"
+        android:paddingLeft="6dp"
+        android:paddingRight="6dp"
+        android:paddingStart="6dp"/>
+
+</FrameLayout>
