@@ -37,14 +37,11 @@ public class PhotoView extends SimpleDraweeView {
 
     @Override
     protected void onDraw(Canvas canvas) {
-
-        Matrix matrix = new Matrix();
-
+        Matrix matrix = canvas.getMatrix();
         matrix.preScale(getScale(), getScale());
         canvas.concat(matrix);
 
         super.onDraw(canvas);
-
     }
 
     public float getScale() {

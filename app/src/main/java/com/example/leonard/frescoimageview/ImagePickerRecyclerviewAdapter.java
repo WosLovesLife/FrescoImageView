@@ -1,5 +1,6 @@
 package com.example.leonard.frescoimageview;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -51,7 +52,8 @@ public class ImagePickerRecyclerviewAdapter extends RecyclerView.Adapter<ImagePi
                     .build().toString();
         }
 
-        ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(url)).setResizeOptions(new ResizeOptions(200, 200)).build();
+        final Uri uri = Uri.parse(url);
+        ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(uri).setResizeOptions(new ResizeOptions(200, 200)).build();
         AbstractDraweeController build = Fresco.newDraweeControllerBuilder()
                 .setImageRequest(imageRequest)
                 .setAutoPlayAnimations(true)
@@ -63,7 +65,9 @@ public class ImagePickerRecyclerviewAdapter extends RecyclerView.Adapter<ImagePi
             @Override
             public void onClick(View v) {
                 // TODO: 17/8/11
-                holder.mDraweeView.setScale(1.5f);
+                Intent intent = new Intent(v.getContext(), BigPhotoActivity.class);
+                intent.putExtra("photo_uri", uri);
+                v.getContext().startActivity(intent);
             }
         });
     }

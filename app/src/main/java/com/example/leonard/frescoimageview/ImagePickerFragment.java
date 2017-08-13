@@ -31,7 +31,6 @@ public class ImagePickerFragment extends Fragment {
     private AppCompatActivity mActivity;
     private RecyclerView mRecyclerView;
 
-
     public static ImagePickerFragment newInstance() {
 
         Bundle args = new Bundle();
