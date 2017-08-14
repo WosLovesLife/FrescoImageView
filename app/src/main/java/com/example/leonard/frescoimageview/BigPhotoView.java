@@ -3,10 +3,12 @@ package com.example.leonard.frescoimageview;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.view.VelocityTrackerCompat;
 import android.support.v4.widget.ScrollerCompat;
 import android.util.AttributeSet;
@@ -16,8 +18,19 @@ import android.view.VelocityTracker;
 import android.view.ViewConfiguration;
 import android.view.animation.DecelerateInterpolator;
 
+import com.facebook.common.references.CloseableReference;
+import com.facebook.datasource.DataSource;
+import com.facebook.datasource.DataSubscriber;
+import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.generic.GenericDraweeHierarchy;
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.core.DefaultExecutorSupplier;
+import com.facebook.imagepipeline.core.ImagePipeline;
+import com.facebook.imagepipeline.core.ProducerFactory;
+import com.facebook.imagepipeline.memory.PooledByteBuffer;
+import com.facebook.imagepipeline.producers.NullProducer;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 
 /**
  * Created by zhangh on 2017/8/12.
@@ -26,6 +39,7 @@ import com.facebook.drawee.view.SimpleDraweeView;
 public class BigPhotoView extends SimpleDraweeView {
 
     private Paint mPaint;
+    private Bitmap mBitmap;
 
     public BigPhotoView(Context context, GenericDraweeHierarchy hierarchy) {
         super(context, hierarchy);
@@ -55,7 +69,7 @@ public class BigPhotoView extends SimpleDraweeView {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.clipRect(0, 0, 1080, 1920);
+        super.onDraw(canvas);
 
 //        Matrix matrix = canvas.getMatrix();
 //        matrix.preScale(getScale(), getScale(), getWidth() / 2, 0);
@@ -67,14 +81,77 @@ public class BigPhotoView extends SimpleDraweeView {
 //        matrix.preScale(getScale(), getScale(), getWidth() / 2, 0);
 //        canvas.concat(matrix);
 
-        Drawable drawable = getDrawable();
-        Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-        int height = 1920;
-
-        Bitmap bitmap2 = Bitmap.createBitmap(bitmap, 0, mCurrentOffsetY, bitmap.getWidth(),
-                bitmap.getHeight() > mCurrentOffsetY + height ? mCurrentOffsetY + height : bitmap.getHeight());
-        canvas.drawBitmap(bitmap2, 0, 0, mPaint);
+        if (mBitmap != null) {
+            int height = getHeight();
+            Bitmap bitmap2 = Bitmap.createBitmap(mBitmap, 0, mCurrentOffsetY, mBitmap.getWidth(), mBitmap.getHeight() - mCurrentOffsetY > height ? height : mBitmap.getHeight() - mCurrentOffsetY);
+            canvas.drawBitmap(bitmap2, 0, 0, mPaint);
+        }
     }
+
+    public void setPhoto(Uri uri) {
+        loadImage(uri);
+    }
+
+    private void loadImage(Uri uri) {
+        ImagePipeline imagePipeline = Fresco.getImagePipeline();
+        ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(uri).build();
+        NullProducer<Object> producer = ProducerFactory.newNullProducer();
+//        DataSource<CloseableReference<CloseableImage>> dataSource = imagePipeline.fetchDecodedImage(imageRequest, producer);
+//        dataSource.subscribe(subscriber, new DefaultExecutorSupplier(1).forBackgroundTasks());
+
+        imagePipeline.fetchEncodedImage(imageRequest, producer).subscribe(new DataSubscriber<CloseableReference<PooledByteBuffer>>() {
+            @Override
+            public void onNewResult(DataSource<CloseableReference<PooledByteBuffer>> dataSource) {
+                if (!dataSource.isFinished()) {
+                    return;
+                }
+                PooledByteBuffer pooledByteBuffer = dataSource.getResult().get();
+                int size = pooledByteBuffer.size();
+                Log.w("Leonard", "onNewResult: " + size);
+                byte[] bytes = new byte[size];
+                pooledByteBuffer.read(0, bytes, 0, size);
+                mBitmap = BitmapFactory.decodeByteArray(bytes, 0, size);
+
+//                List<Bitmap> mBitmaps = new ArrayList<>();
+//                int height = mBitmap.getWidth();
+//                long count = Math.round(mBitmap.getHeight() * 1f / height + 0.5);
+//                for (int i = 0; i < count; i++) {
+//                    int consumedHeight = height * i;
+//                    Bitmap bp = Bitmap.createBitmap(mBitmap, 0, consumedHeight, mBitmap.getWidth(), mBitmap.getHeight() - consumedHeight > height ? height : mBitmap.getHeight() - consumedHeight);
+//                    mBitmaps.add(bp);
+//                }
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mAdapter.notifyDataSetChanged();
+//                    }
+//                });
+
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        invalidate();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(DataSource<CloseableReference<PooledByteBuffer>> dataSource) {
+
+            }
+
+            @Override
+            public void onCancellation(DataSource<CloseableReference<PooledByteBuffer>> dataSource) {
+
+            }
+
+            @Override
+            public void onProgressUpdate(DataSource<CloseableReference<PooledByteBuffer>> dataSource) {
+
+            }
+        }, new DefaultExecutorSupplier(1).forBackgroundTasks());
+    }
+
 
     public float getScale() {
         float width = getDrawable().getBounds().width();
